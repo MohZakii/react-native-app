@@ -12,7 +12,7 @@ import { Header } from "../../components/Header";
 import { Input } from "../../components/SearchBar";
 import styles from "./styles";
 import { COLORS } from "../../theme/colors";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getMoviesList } from "../../api/movies";
 import { MovieCard } from "../../components/MovieCard";
 
@@ -20,6 +20,20 @@ const SearchScreen = () => {
   const [value, setValue] = useState();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      const fun = async () => {
+        setLoading(true);
+        const data = await getMoviesList({ searchValue: value });
+        setData(data);
+        setLoading(false);
+      };
+      fun();
+    }, 2000);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [value]);
 
   const onPressSearch = async () => {
     setLoading(true);
@@ -42,6 +56,7 @@ const SearchScreen = () => {
         <Input
           value={value}
           onChangeText={onChangeText}
+          onChange={(e) => setData(e.target.value)}
           right={
             <Pressable onPress={onPressSearch} style={styles.searchBtn}>
               <FontAwesome name="search" size={24} color={COLORS.sun} />
@@ -58,6 +73,7 @@ const SearchScreen = () => {
         />
       ) : (
         <FlatList
+          initialNumToRender={2}
           data={data}
           renderItem={renderItem}
           contentContainerStyle={styles.contentContainer}
